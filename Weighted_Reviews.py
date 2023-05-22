@@ -1,4 +1,6 @@
 
+
+
 # OUTLINE 
 # _______________________________________________
 # Approach inspired by Bayesian probability is to have an initial belief about the 'true' rating
@@ -35,8 +37,30 @@
 # ∴ Weighted_Rating = (2*3 + 5) / (3 + 1) = 2.75☆
 # Average = 5☆
 #
-# TODO Actual implementation of the base function
-# TODO Function to create synthetic review data
+# TODO Implementation of the base function
+# TODO Function to create better synthetic review data
 # TODO Importation of actual review data from UberEats or Amazon :)
 # TODO Find the related XKCD about how anything below 5 starts is shit
 # TODO Transcribe rationale for this program from notes
+
+r = 2
+w = 3
+
+ex1 = [4] * 100
+ex3 = [4] * 10
+ex4 = [5] * 1
+ex4b = [5] * 100
+
+def count_occurrences(arr):
+    occurrences = {}
+    for num in arr:
+        if num in occurrences:
+            occurrences[num] += 1
+        else:
+            occurrences[num] = 1
+    return occurrences
+
+def weighted_rating(r, w, data):
+    rating = ((r*w) + ())
+    return rating
+
