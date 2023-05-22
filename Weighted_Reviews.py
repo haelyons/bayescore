@@ -36,8 +36,8 @@
 # 4. For 1 ratings of 5
 # ∴ Weighted_Rating = (2*3 + 5) / (3 + 1) = 2.75☆
 # Average = 5☆
-#
-# TODO Implementation of the base function
+# 
+# TODO Generalise looping over subsets to allow examples with multiple values
 # TODO Function to create better synthetic review data
 # TODO Importation of actual review data from UberEats or Amazon :)
 # TODO Find the related XKCD about how anything below 5 starts is shit
@@ -78,9 +78,9 @@ def split_by_recurring_numbers(data):
     
     return result
 
-recurrences = split_by_recurring_numbers(ex1)
-
 def weighted_rating(r, w, data):
+    recurrences = split_by_recurring_numbers(data)
+
     for group in recurrences:
         print("Group:", group)
         groupLength = len(group)
@@ -92,5 +92,5 @@ def weighted_rating(r, w, data):
     rating = ((r * w) + (groupValue)) / (w + len(data))
     return rating
 
-computedRating = weighted_rating(r, w, ex1)
+computedRating = weighted_rating(r, w, test)
 print(computedRating)
