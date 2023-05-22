@@ -89,7 +89,7 @@ def weighted_rating(r, w, data):
             groupValue = value * groupLength
             print(groupValue)
 
-    rating = ((r * w) + (3) / (3 + len(data)))
+    rating = ((r * w) + (groupValue)) / (w + len(data))
     return rating
 
 computedRating = weighted_rating(r, w, ex1)
