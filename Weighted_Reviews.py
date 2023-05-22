@@ -78,12 +78,19 @@ def split_by_recurring_numbers(data):
     
     return result
 
+recurrences = split_by_recurring_numbers(ex1)
 
 def weighted_rating(r, w, data):
-    rating = ((r*w) + ())
+    for group in recurrences:
+        print("Group:", group)
+        groupLength = len(group)
+        for value in group:
+            print("Value:", value)
+            groupValue = value * groupLength
+            print(groupValue)
+
+    rating = ((r * w) + (3) / (3 + len(data)))
     return rating
 
-splitTest = split_by_recurring_numbers(ex1)
-
-for group in splitTest:
-    print(group)
+computedRating = weighted_rating(r, w, ex1)
+print(computedRating)
