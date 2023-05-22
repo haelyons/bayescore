@@ -48,19 +48,42 @@ w = 3
 
 ex1 = [4] * 100
 ex3 = [4] * 10
+ex3 = [4] * 10
 ex4 = [5] * 1
 ex4b = [5] * 100
+test = [1, 2, 2, 3, 3, 3, 4, 4, 4, 4, 5]
 
-def count_occurrences(arr):
+def split_by_recurring_numbers(data):
     occurrences = {}
-    for num in arr:
+    result = []
+    
+    for num in data:
         if num in occurrences:
             occurrences[num] += 1
         else:
             occurrences[num] = 1
-    return occurrences
+    
+    temp_arr = []
+    current_num = data[0]
+    
+    for num in data:
+        if num == current_num:
+            temp_arr.append(num)
+        else:
+            result.append(temp_arr)
+            temp_arr = [num]
+            current_num = num
+    
+    result.append(temp_arr)
+    
+    return result
+
 
 def weighted_rating(r, w, data):
     rating = ((r*w) + ())
     return rating
 
+splitTest = split_by_recurring_numbers(ex1)
+
+for group in splitTest:
+    print(group)
