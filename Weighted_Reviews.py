@@ -37,7 +37,6 @@
 # ∴ Weighted_Rating = (2*3 + 5*1) / (3 + 1) = 2.75☆
 # Average = 5☆
 # 
-# TODO Generalise looping over subsets to allow examples with multiple values
 # TODO Function to create better synthetic review data
 # TODO Importation of actual review data from UberEats or Amazon :)
 # TODO Find the related XKCD about how anything below 5 starts is shit
@@ -96,5 +95,5 @@ def compute_rating(r, w, g_mean, g_len):
     rating = ((r * w) + (g_mean * g_len)) / (w + g_len)
     return rating
 
-rating = compute_rating(r, w, len(test)*statistics.mean(test))
+rating = compute_rating(r, w, statistics.mean(test), len(test))
 print(rating)
