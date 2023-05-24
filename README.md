@@ -16,7 +16,7 @@ Given R=2 and W=3, where N is number of user ratings, V is their average
 
 Weighted_Rating = (R*W + N*V) / (W+N)
 
-1. For 100 user ratings of 4 
+1. For 100 user ratings of 4
 ∴ Weighted_Rating = (2*3 + 100*4) / (100 + 3) = 3.94☆
 In comparison, a straight average would give us a 4☆ rating.
 
