@@ -1,5 +1,5 @@
-
-
+import statistics
+import random
 
 # OUTLINE 
 # _______________________________________________
@@ -42,8 +42,6 @@
 # TODO Find the related XKCD about how anything below 5 starts is shit
 # TODO Transcribe rationale for this program from notes
 
-import statistics
-
 r = 2
 w = 3
 
@@ -53,6 +51,11 @@ ex3 = [4] * 10
 ex4 = [5] * 1
 ex4b = [5] * 100
 test = [1, 2, 2, 3, 3, 3, 4, 4, 4, 4, 5]
+randomlist = []
+
+for i in range(0,1000):
+    n = random.randint(0,5)
+    randomlist.append(n)
 
 def split_by_recurring_numbers(data):
     occurrences = {}
@@ -95,5 +98,5 @@ def compute_rating(r, w, g_mean, g_len):
     rating = ((r * w) + (g_mean * g_len)) / (w + g_len)
     return rating
 
-rating = compute_rating(r, w, statistics.mean(test), len(test))
+rating = compute_rating(r, w, statistics.mean(randomlist), len(randomlist))
 print(rating)
