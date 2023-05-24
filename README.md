@@ -1,7 +1,4 @@
-# Weighted_Reviews
-Thinking of a Bayesian approach to sorting review ratings
-
-# OUTLINE 
+# Outline 
 Approach inspired by Bayesian probability is to have an initial belief about the 'true' rating
 of an item, and use user ratings to update this belief, meaning we will have to quantify an 
 initial rating for each item (using a 5 point scale, as most review systems do).
@@ -13,7 +10,7 @@ As such, we require 2 parameters:
  - The weight that we want to give this initial belief, versus subsequent ratings
    'W' -> the weight of our initial belief, where belief 'R' is worth W user ratings 
 
-# EXAMPLE 
+# Examples 
 Assume you have W ratings of value R along with any user ratings, and find the average. 
 Given R=2 and W=3, where N is number of user ratings, V is their average
 
