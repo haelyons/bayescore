@@ -50,53 +50,40 @@ ex3 = [4] * 10
 ex3 = [4] * 10
 ex4 = [5] * 1
 ex4b = [5] * 100
-test = [1, 2, 2, 3, 3, 3, 4, 4, 4, 4, 5]
-randomlist = []
+ex5 = [1, 2, 2, 3, 3, 3, 4, 4, 4, 4, 5]
 
-for i in range(0,1000):
-    n = random.randint(0,5)
-    randomlist.append(n)
-
-def split_by_recurring_numbers(data):
-    occurrences = {}
-    result = []
-    
-    for num in data:
-        if num in occurrences:
-            occurrences[num] += 1
+def upperList():
+    list = []
+    for i in range(0,1000):
+        if 400 < i < 600:
+            list.append(4)
         else:
-            occurrences[num] = 1
-    
-    temp_arr = []
-    current_num = data[0]
-    
-    for num in data:
-        if num == current_num:
-            temp_arr.append(num)
-        else:
-            result.append(temp_arr)
-            temp_arr = [num]
-            current_num = num
-    
-    result.append(temp_arr)
-    
-    return result
+            list.append(5)
+    return list
 
-def iterate_split(r, w, data):
-    recurrences = split_by_recurring_numbers(data)
-
-    for group in recurrences:
-        print("Group:", group)
-        groupLength = len(group)
-        for value in group:
-            print("Value:", value)
-            groupValue = value * groupLength
-            print(groupValue)
-    return groupValue
+def randomList():
+    list = []
+    for i in range(0,1000):
+        n = random.randint(0,5)
+        list.append(n)
+    return list
 
 def compute_rating(r, w, g_mean, g_len):
     rating = ((r * w) + (g_mean * g_len)) / (w + g_len)
     return rating
 
-rating = compute_rating(r, w, statistics.mean(randomlist), len(randomlist))
+list = ex5 # Select list
+
+rating_avg = statistics.mean(list)
+print("Mean: ", rating_avg)
+
+rating = compute_rating(r, w, rating_avg, len(list))
 print(rating)
+
+# THOUGHTS 25/5/23
+# Seems like it's more interesting to look at smaller numbers of reviews, as this
+# is where we see significant differences in rating schemas. Over 1000 ratings we 
+# can see that there is very little difference between the weighted rating, and 
+# the mean rating.
+#
+# TODO Plot results to illustrate the above :)
