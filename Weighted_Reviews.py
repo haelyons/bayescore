@@ -1,8 +1,5 @@
 import statistics
 import random
-import numpy as np
-import matplotlib.pyplot as plt
-from matplotlib.widgets import Slider, Button
 
 # RELATED XKCD
 # https://www.explainxkcd.com/wiki/index.php/1098:_Star_Ratings
