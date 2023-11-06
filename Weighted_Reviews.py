@@ -5,10 +5,9 @@ import tkinter as tk
 # RELATED XKCD
 # https://www.explainxkcd.com/wiki/index.php/1098:_Star_Ratings
 
-# TODO Basic GUI for modifying R and W interactively as a way to understand
-# their effects on the weighted rating - use matplotlib
-# TODO Importation of actual review data from UberEats or Amazon :)
-# TODO Plot results for shorter vs. longer datasets and similarity with mean
+# TODO 2 mode implementation 
+# -- "Playground" for interactively modifying R and W using the example review sets below
+# -- "Map" using the Google Maps API to generate new ratings for restaurants in a specific area
 
 global r
 global w
