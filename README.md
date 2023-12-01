@@ -24,7 +24,7 @@ Weighted_Rating = (R*W + N*V) / (W+N)
 - In comparison, a straight average would give us a 4☆ rating.
 
 2. For 3 ratings of 5 and 1 rating of 4
-- Weighted_Rating = (2 ⋅ 3 + 35 ⋅ 4) / (3 + 4) = 3.57☆
+- Weighted_Rating = (2 ⋅ 3 + 1 ⋅ 4 + 3 ⋅ 5) / (3 + 4) = 3.57☆
 - Average = 4.75☆
 
 3. For 10 ratings of 4
