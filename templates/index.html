@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurant Rating Recalculator</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f0f0f0;
+        }
+        h1 {
+            color: #333;
+        }
+        #search-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        #search-input {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+        #search-button {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        #result {
+            margin-top: 20px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <h1>Restaurant Rating Recalculator</h1>
+    <div id="search-container">
+        <input type="text" id="search-input" placeholder="Enter a restaurant name">
+        <button id="search-button">Calculate Rating</button>
+    </div>
+    <div id="result"></div>
+
+    <script>
+        document.getElementById('search-button').addEventListener('click', async () => {
+            const restaurantName = document.getElementById('search-input').value;
+            const result = document.getElementById('result');
+            
+            if (!restaurantName) {
+                result.innerHTML = 'Please enter a restaurant name.';
+                return;
+            }
+            
+            result.innerHTML = 'Calculating...';
+
+            try {
+                const response = await fetch('/calculate_rating', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ restaurant_name: restaurantName }),
+                });
+                const data = await response.json();
+                if (data.error) {
+                    result.innerHTML = `Error: ${data.error}`;
+                } else {
+                    result.innerHTML = `
+                        <h2>${data.name}</h2>
+                        <p>Original rating: ${data.original_rating}</p>
+                        <p>Recalculated rating: ${data.recalculated_rating}</p>
+                    `;
+                }
+            } catch (error) {
+                result.innerHTML = 'An error occurred. Please try again.';
+                console.error('Error:', error);
+            }
+        });
+    </script>
+</body>
+</html>

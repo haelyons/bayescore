@@ -34,3 +34,16 @@ Weighted_Rating = (R*W + N*V) / (W+N)
 4. For 1 ratings of 5
 - Weighted_Rating = (2 ⋅ 3 + 5 ⋅ 1) / (3 + 1) = 2.75☆
 - Average = 5☆
+
+# Usage
+
+You'll need a Google Maps API, which you can get through the [Google Cloud Console](https://console.cloud.google.com/).
+After acquiring a key, export it as an environment variable: `export GOOGLE_MAPS_API_KEY='your_actual_api_key_here'`.
+You will be able to enter restaurant names into the menu.
+
+Installation:
+```
+git clone https://github.com/your-username/bayesian-food-ratings.git
+cd bayesian-food-ratings
+python app.py
+```
