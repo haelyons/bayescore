@@ -47,3 +47,9 @@ git clone https://github.com/your-username/bayesian-food-ratings.git
 cd bayesian-food-ratings
 python app.py
 ```
+
+# Todo
+- Simplify interface (just a plain textbox in the middle of the page)
+- Add auto-completion like in the Google example
+- Add history (keep previous searches visible)
+- Add brief explanation & example use case (ex. high rating with few reviews)
