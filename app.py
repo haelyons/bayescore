@@ -149,31 +149,56 @@ with gr.Blocks(title="Bayescore") as demo:
     
     restaurant_input = gr.Textbox(
         label="Restaurant Name",
-        placeholder="e.g., 'Joe's Pizza Brooklyn'",
+        placeholder="ex. 'The Holy Tavern'",
         elem_id="restaurant-search"
     )
     
     # Add Google Places Autocomplete to the textbox
     if GOOGLE_MAPS_API_KEY:
         gr.HTML(f"""
-        <script src="https://maps.googleapis.com/maps/api/js?key={GOOGLE_MAPS_API_KEY}&libraries=places"></script>
+        <script src="https://maps.googleapis.com/maps/api/js?key={GOOGLE_MAPS_API_KEY}&libraries=places&callback=initAutocompleteCallback" async defer></script>
         <script>
-        function initAutocomplete() {{
-            const input = document.querySelector('#restaurant-search input');
+        let autocompleteAttempts = 0;
+        
+        function initAutocompleteCallback() {{
+            // Called when Maps API loads
+            tryInitAutocomplete();
+        }}
+        
+        function tryInitAutocomplete() {{
+            // Try multiple selectors to find the input
+            const selectors = [
+                '#restaurant-search input',
+                '#restaurant-search textarea',
+                'input[placeholder*="Holy Tavern"]',
+                'label:contains("Restaurant Name") + input'
+            ];
+            
+            let input = null;
+            for (const selector of selectors) {{
+                input = document.querySelector(selector);
+                if (input) break;
+            }}
+            
             if (!input) {{
-                setTimeout(initAutocomplete, 100);
+                autocompleteAttempts++;
+                if (autocompleteAttempts < 50) {{  // Try for 5 seconds
+                    setTimeout(tryInitAutocomplete, 100);
+                }}
                 return;
             }}
+            
+            // Create autocomplete
             const autocomplete = new google.maps.places.Autocomplete(input, {{
                 types: ['establishment'],
-                fields: ['name']
+                fields: ['name', 'formatted_address']
             }});
+            
+            console.log('Google Places Autocomplete initialized');
         }}
-        if (document.readyState === 'loading') {{
-            document.addEventListener('DOMContentLoaded', initAutocomplete);
-        }} else {{
-            initAutocomplete();
-        }}
+        
+        // Start trying to initialize after a short delay
+        setTimeout(tryInitAutocomplete, 500);
         </script>
         """)
     
