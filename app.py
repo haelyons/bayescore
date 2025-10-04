@@ -149,8 +149,33 @@ with gr.Blocks(title="Bayescore") as demo:
     
     restaurant_input = gr.Textbox(
         label="Restaurant Name",
-        placeholder="e.g., 'Joe's Pizza Brooklyn'"
+        placeholder="e.g., 'Joe's Pizza Brooklyn'",
+        elem_id="restaurant-search"
     )
+    
+    # Add Google Places Autocomplete to the textbox
+    if GOOGLE_MAPS_API_KEY:
+        gr.HTML(f"""
+        <script src="https://maps.googleapis.com/maps/api/js?key={GOOGLE_MAPS_API_KEY}&libraries=places"></script>
+        <script>
+        function initAutocomplete() {{
+            const input = document.querySelector('#restaurant-search input');
+            if (!input) {{
+                setTimeout(initAutocomplete, 100);
+                return;
+            }}
+            const autocomplete = new google.maps.places.Autocomplete(input, {{
+                types: ['establishment'],
+                fields: ['name']
+            }});
+        }}
+        if (document.readyState === 'loading') {{
+            document.addEventListener('DOMContentLoaded', initAutocomplete);
+        }} else {{
+            initAutocomplete();
+        }}
+        </script>
+        """)
     
     error_output = gr.Markdown()
     
