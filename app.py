@@ -12,14 +12,16 @@ def get_restaurant_rating(restaurant_name, r_value, w_value, user_api_key):
     
     if not api_key:
         return {
-            "error": "No API key. Either enter one above or ask the Space owner to configure GOOGLE_MAPS_API_KEY",
-            "name": "", "original": "", "weighted": "", "num_reviews": "", "explanation": ""
+            "error": "❌ No API key provided",
+            "api_status": "Missing API key",
+            "name": "", "original": "", "weighted": "", "num_reviews": ""
         }
     
     if not restaurant_name or restaurant_name.strip() == "":
         return {
             "error": "Please enter a restaurant name",
-            "name": "", "original": "", "weighted": "", "num_reviews": "", "explanation": ""
+            "api_status": "Ready",
+            "name": "", "original": "", "weighted": "", "num_reviews": ""
         }
     
     try:
@@ -34,15 +36,32 @@ def get_restaurant_rating(restaurant_name, r_value, w_value, user_api_key):
         search_data = search_response.json()
         
         if search_data['status'] == 'REQUEST_DENIED':
+            error_msg = search_data.get('error_message', 'API request denied')
             return {
-                "error": "API key invalid or Places API not enabled",
-                "name": "", "original": "", "weighted": "", "num_reviews": "", "explanation": ""
+                "error": f"❌ **API Error**: {error_msg}",
+                "api_status": f"Status: REQUEST_DENIED | Check API key and Places API enablement",
+                "name": "", "original": "", "weighted": "", "num_reviews": ""
+            }
+        
+        if search_data['status'] == 'INVALID_REQUEST':
+            return {
+                "error": f"❌ **Invalid Request**",
+                "api_status": f"Status: INVALID_REQUEST | Check API parameters",
+                "name": "", "original": "", "weighted": "", "num_reviews": ""
+            }
+        
+        if search_data['status'] == 'OVER_QUERY_LIMIT':
+            return {
+                "error": f"❌ **Quota Exceeded**",
+                "api_status": f"Status: OVER_QUERY_LIMIT | API quota exceeded for this key",
+                "name": "", "original": "", "weighted": "", "num_reviews": ""
             }
         
         if search_data['status'] != 'OK' or not search_data.get('candidates'):
             return {
-                "error": f"'{restaurant_name}' not found. Try being more specific (include city)",
-                "name": "", "original": "", "weighted": "", "num_reviews": "", "explanation": ""
+                "error": f"'{restaurant_name}' not found",
+                "api_status": f"Status: {search_data['status']} | ZERO_RESULTS",
+                "name": "", "original": "", "weighted": "", "num_reviews": ""
             }
         
         place_id = search_data['candidates'][0]['place_id']
@@ -58,8 +77,9 @@ def get_restaurant_rating(restaurant_name, r_value, w_value, user_api_key):
         
         if details_data['status'] != 'OK':
             return {
-                "error": f"API Error: {details_data.get('status', 'Unknown')}",
-                "name": "", "original": "", "weighted": "", "num_reviews": "", "explanation": ""
+                "error": f"❌ **Details API Error**",
+                "api_status": f"Status: {details_data['status']} | {details_data.get('error_message', 'Unknown error')}",
+                "name": "", "original": "", "weighted": "", "num_reviews": ""
             }
         
         place = details_data['result']
@@ -69,149 +89,170 @@ def get_restaurant_rating(restaurant_name, r_value, w_value, user_api_key):
         
         if original_rating is None or num_ratings is None:
             return {
-                "error": f"No rating data available for {name}",
-                "name": name, "original": "", "weighted": "", "num_reviews": "", "explanation": ""
+                "error": f"No ratings available for {name}",
+                "api_status": "Status: OK | No rating data",
+                "name": name, "original": "", "weighted": "", "num_reviews": ""
             }
         
         weighted_rating = compute_rating(r_value, w_value, original_rating, num_ratings)
         
-        explanation = f"""
-**Calculation:**
-
-`({r_value} × {w_value} + {original_rating} × {num_ratings}) / ({w_value} + {num_ratings}) = {weighted_rating:.2f}★`
-
-This assumes {w_value} prior ratings of {r_value}★ exist before considering the {num_ratings:,} actual reviews.
-
-With few reviews, the score pulls toward {r_value}★ (your prior belief). With many reviews, actual ratings dominate the score. This prevents misleading ratings from small sample sizes.
-"""        
         return {
             "error": "",
+            "api_status": "✓ Status: OK",
             "name": name,
-            "original": f"{original_rating}★",
-            "weighted": f"{weighted_rating:.2f}★",
-            "num_reviews": f"{num_ratings:,} reviews",
-            "explanation": explanation
+            "original": f"{original_rating}",
+            "weighted": f"{weighted_rating:.2f}",
+            "num_reviews": f"{num_ratings:,}"
         }
         
+    except requests.exceptions.RequestException as e:
+        return {
+            "error": f"❌ **Network Error**: {str(e)}",
+            "api_status": "Connection failed",
+            "name": "", "original": "", "weighted": "", "num_reviews": ""
+        }
     except Exception as e:
         return {
-            "error": f"Error: {str(e)}",
-            "name": "", "original": "", "weighted": "", "num_reviews": "", "explanation": ""
+            "error": f"❌ **Error**: {str(e)}",
+            "api_status": "Exception occurred",
+            "name": "", "original": "", "weighted": "", "num_reviews": ""
         }
 
 def process_restaurant(restaurant_name, r_value, w_value, user_api_key):
     result = get_restaurant_rating(restaurant_name, r_value, w_value, user_api_key)
     
     if result["error"]:
-        return result["error"], "", "", "", "", result["explanation"] if result["explanation"] else ""
-    
-    return "", result["name"], result["original"], result["weighted"], result["num_reviews"], result["explanation"]
-
-with gr.Blocks(title="Bayesian Restaurant Ratings", theme=gr.themes.Soft()) as demo:
-    gr.Markdown("""
-    # 🍽️ Bayescore
-    
-    Recalculates restaurant ratings using a Bayesian approach.
-    
-    We treat each restaurant as if it started with **W** prior ratings of **R** stars, then factor in actual reviews.
-    This prevents edge cases like "1 perfect review = 5★" or brand new places being unfairly judged.
-    """)
-    
-    with gr.Accordion("API Key", open=not GOOGLE_MAPS_API_KEY):
-        if GOOGLE_MAPS_API_KEY:
-            gr.Markdown("API key found")
-        else:
-            gr.Markdown("""
-            No API key in environment. You can:
-            1. Enter your key below
-            2. Fork this Space and add `GOOGLE_MAPS_API_KEY` in Settings → Secrets
-            
-            [Get an API key →](https://console.cloud.google.com) (enable Places API)
-            """)
-        
-        api_key_input = gr.Textbox(
-            label="Google Maps API Key (optional)",
-            placeholder="Paste API key here",
-            type="password",
-            value="",
-            info="Never stored"
+        return (
+            result["api_status"],
+            result["error"],
+            gr.update(visible=False),
+            gr.update(visible=False),
+            gr.update(visible=False),
+            gr.update(visible=False),
+            gr.update(visible=False)
         )
     
-    with gr.Row():
-        with gr.Column(scale=2):
-            restaurant_input = gr.Textbox(
-                label="Restaurant Name",
-                placeholder="e.g., 'Joe's Pizza Brooklyn' or 'Noma Copenhagen'",
-                lines=1
+    # Success - show results
+    return (
+        result["api_status"],
+        "",
+        gr.update(value=result["name"], visible=True),
+        gr.update(value=f"{result['original']}★ ({result['num_reviews']} reviews)", visible=True),
+        gr.update(visible=True),
+        gr.update(visible=True),
+        gr.update(value=f"{result['weighted']}★", visible=True)
+    )
+
+with gr.Blocks(title="Bayescore", theme=gr.themes.Soft()) as demo:
+    gr.Markdown("# 🍽️ Bayescore")
+    
+    # Step 1: API Key
+    with gr.Group():
+        gr.Markdown("### 1. API Access")
+        api_key_input = gr.Textbox(
+            label="Google Maps API Key",
+            placeholder="Enter your API key" if not GOOGLE_MAPS_API_KEY else "Using configured key",
+            type="password",
+            value="",
+            scale=4
+        )
+        api_status_output = gr.Markdown(
+            "✓ API key configured" if GOOGLE_MAPS_API_KEY else "⚠️ No API key",
+            elem_classes="status-text"
+        )
+    
+    # Step 2: Search
+    with gr.Group():
+        gr.Markdown("### 2. Search Restaurant")
+        restaurant_input = gr.Textbox(
+            label="",
+            placeholder="Restaurant name (e.g., 'Joe's Pizza Brooklyn')",
+            lines=1,
+            scale=4
+        )
+        submit_btn = gr.Button("Search", variant="primary", scale=1)
+        
+        error_output = gr.Markdown(visible=True)
+        
+        # Restaurant info (hidden until search)
+        restaurant_name = gr.Textbox(
+            label="Restaurant",
+            interactive=False,
+            visible=False
+        )
+        google_rating = gr.Textbox(
+            label="Google Rating",
+            interactive=False,
+            visible=False
+        )
+    
+    # Step 3: Adjust Bayesian Parameters
+    with gr.Group():
+        gr.Markdown("### 3. Adjust Prior")
+        sliders_row = gr.Row(visible=False)
+        with sliders_row:
+            r_slider = gr.Slider(
+                minimum=1,
+                maximum=5,
+                value=2.5,
+                step=0.1,
+                label="Prior Rating (R)",
+                info="Expected rating with no reviews"
             )
             
-            with gr.Row():
-                r_slider = gr.Slider(
-                    minimum=1,
-                    maximum=5,
-                    value=2.5,
-                    step=0.1,
-                    label="R - Prior Rating",
-                    info="Your default belief about an unrated place"
-                )
-                
-                w_slider = gr.Slider(
-                    minimum=0,
-                    maximum=50,
-                    value=5,
-                    step=1,
-                    label="W - Prior Weight",
-                    info="How many prior ratings worth of confidence"
-                )
-            
-            submit_btn = gr.Button("Calculate Rating", variant="primary", size="lg")
+            w_slider = gr.Slider(
+                minimum=0,
+                maximum=50,
+                value=5,
+                step=1,
+                label="Prior Weight (W)",
+                info="Strength of prior belief"
+            )
     
-    error_output = gr.Markdown(visible=True)
+    # Step 4: Result
+    with gr.Group():
+        gr.Markdown("### 4. Bayesian Rating")
+        calc_btn = gr.Button("Calculate", variant="secondary", visible=False)
+        bayesian_output = gr.Textbox(
+            label="Adjusted Rating",
+            interactive=False,
+            visible=False,
+            elem_classes="result-text"
+        )
     
-    with gr.Row():
-        name_output = gr.Textbox(label="Restaurant", interactive=False)
-    
-    with gr.Row():
-        with gr.Column():
-            original_output = gr.Textbox(label="Google Rating", interactive=False)
-        with gr.Column():
-            weighted_output = gr.Textbox(label="Bayesian Rating", interactive=False)
-        with gr.Column():
-            reviews_output = gr.Textbox(label="Review Count", interactive=False)
-    
-    explanation_output = gr.Markdown()
-    
-    gr.Markdown("""
-    ---
-    ### Parameter Guide:
-    
-    **R (Prior Rating):** What score would you assume for a place with zero reviews?
-    - Don't use the minimum (1★) - places with terrible reviews should score worse than no-review places
-    - Try the median of all established places in your area (often 3-4★)
-    - Lower = more skeptical, Higher = more optimistic
-    
-    **W (Prior Weight):** How strongly should this prior influence the final score?
-    - Higher W = prior dominates (useful when reviews are noisy/spammy)
-    - Lower W = actual reviews dominate faster (useful when reviews are reliable)
-    - Rule of thumb: W should be between C/20 and C/5, where C = typical review count
-    - W=0 ignores prior entirely, W=∞ ignores actual reviews
-    
-    ### Examples:
-    - **Conservative** (R=3.5, W=20): Heavily weights your prior, slow to trust extreme ratings
-    - **Balanced** (R=2.5, W=5): Moderate influence, adjusts reasonably with reviews
-    - **Trusting** (R=3, W=2): Mostly trusts actual ratings, minimal adjustment
-    """)
+    # Wire up the search
+    def search_wrapper(restaurant_name, r_value, w_value, user_api_key):
+        return process_restaurant(restaurant_name, r_value, w_value, user_api_key)
     
     submit_btn.click(
-        fn=process_restaurant,
+        fn=search_wrapper,
         inputs=[restaurant_input, r_slider, w_slider, api_key_input],
-        outputs=[error_output, name_output, original_output, weighted_output, reviews_output, explanation_output]
+        outputs=[api_status_output, error_output, restaurant_name, google_rating, sliders_row, calc_btn, bayesian_output]
     )
     
     restaurant_input.submit(
-        fn=process_restaurant,
+        fn=search_wrapper,
         inputs=[restaurant_input, r_slider, w_slider, api_key_input],
-        outputs=[error_output, name_output, original_output, weighted_output, reviews_output, explanation_output]
+        outputs=[api_status_output, error_output, restaurant_name, google_rating, sliders_row, calc_btn, bayesian_output]
+    )
+    
+    # Wire up the calculate button (recalculates when sliders change)
+    calc_btn.click(
+        fn=search_wrapper,
+        inputs=[restaurant_input, r_slider, w_slider, api_key_input],
+        outputs=[api_status_output, error_output, restaurant_name, google_rating, sliders_row, calc_btn, bayesian_output]
+    )
+    
+    r_slider.change(
+        fn=search_wrapper,
+        inputs=[restaurant_input, r_slider, w_slider, api_key_input],
+        outputs=[api_status_output, error_output, restaurant_name, google_rating, sliders_row, calc_btn, bayesian_output]
+    )
+    
+    w_slider.change(
+        fn=search_wrapper,
+        inputs=[restaurant_input, r_slider, w_slider, api_key_input],
+        outputs=[api_status_output, error_output, restaurant_name, google_rating, sliders_row, calc_btn, bayesian_output]
     )
 
 if __name__ == "__main__":
