@@ -122,137 +122,71 @@ def process_restaurant(restaurant_name, r_value, w_value, user_api_key):
     result = get_restaurant_rating(restaurant_name, r_value, w_value, user_api_key)
     
     if result["error"]:
-        return (
-            result["api_status"],
-            result["error"],
-            gr.update(visible=False),
-            gr.update(visible=False),
-            gr.update(visible=False),
-            gr.update(visible=False),
-            gr.update(visible=False)
-        )
+        return result["api_status"], result["error"], "", "", ""
     
-    # Success - show results
     return (
         result["api_status"],
         "",
-        gr.update(value=result["name"], visible=True),
-        gr.update(value=f"{result['original']}★ ({result['num_reviews']} reviews)", visible=True),
-        gr.update(visible=True),
-        gr.update(visible=True),
-        gr.update(value=f"{result['weighted']}★", visible=True)
+        result["name"],
+        f"{result['original']}★ ({result['num_reviews']} reviews)",
+        f"{result['weighted']}★"
     )
 
-with gr.Blocks(title="Bayescore", theme=gr.themes.Soft()) as demo:
+with gr.Blocks(title="Bayescore") as demo:
     gr.Markdown("# 🍽️ Bayescore")
+    gr.Markdown("Bayesian restaurant ratings that account for sample size")
     
-    # Step 1: API Key
-    with gr.Group():
-        gr.Markdown("### 1. API Access")
+    with gr.Accordion("API Key", open=not GOOGLE_MAPS_API_KEY):
         api_key_input = gr.Textbox(
             label="Google Maps API Key",
-            placeholder="Enter your API key" if not GOOGLE_MAPS_API_KEY else "Using configured key",
-            type="password",
-            value="",
-            scale=4
-        )
-        api_status_output = gr.Markdown(
-            "✓ API key configured" if GOOGLE_MAPS_API_KEY else "⚠️ No API key",
-            elem_classes="status-text"
+            placeholder="Enter API key or set GOOGLE_MAPS_API_KEY env var",
+            type="password"
         )
     
-    # Step 2: Search
-    with gr.Group():
-        gr.Markdown("### 2. Search Restaurant")
-        restaurant_input = gr.Textbox(
-            label="",
-            placeholder="Restaurant name (e.g., 'Joe's Pizza Brooklyn')",
-            lines=1,
-            scale=4
-        )
-        submit_btn = gr.Button("Search", variant="primary", scale=1)
-        
-        error_output = gr.Markdown(visible=True)
-        
-        # Restaurant info (hidden until search)
-        restaurant_name = gr.Textbox(
-            label="Restaurant",
-            interactive=False,
-            visible=False
-        )
-        google_rating = gr.Textbox(
-            label="Google Rating",
-            interactive=False,
-            visible=False
-        )
-    
-    # Step 3: Adjust Bayesian Parameters
-    with gr.Group():
-        gr.Markdown("### 3. Adjust Prior")
-        sliders_row = gr.Row(visible=False)
-        with sliders_row:
-            r_slider = gr.Slider(
-                minimum=1,
-                maximum=5,
-                value=2.5,
-                step=0.1,
-                label="Prior Rating (R)",
-                info="Expected rating with no reviews"
-            )
-            
-            w_slider = gr.Slider(
-                minimum=0,
-                maximum=50,
-                value=5,
-                step=1,
-                label="Prior Weight (W)",
-                info="Strength of prior belief"
-            )
-    
-    # Step 4: Result
-    with gr.Group():
-        gr.Markdown("### 4. Bayesian Rating")
-        calc_btn = gr.Button("Calculate", variant="secondary", visible=False)
-        bayesian_output = gr.Textbox(
-            label="Adjusted Rating",
-            interactive=False,
-            visible=False,
-            elem_classes="result-text"
-        )
-    
-    # Wire up the search
-    def search_wrapper(restaurant_name, r_value, w_value, user_api_key):
-        return process_restaurant(restaurant_name, r_value, w_value, user_api_key)
-    
-    submit_btn.click(
-        fn=search_wrapper,
-        inputs=[restaurant_input, r_slider, w_slider, api_key_input],
-        outputs=[api_status_output, error_output, restaurant_name, google_rating, sliders_row, calc_btn, bayesian_output]
+    api_status = gr.Markdown(
+        "✓ API key configured" if GOOGLE_MAPS_API_KEY else "⚠️ No API key"
     )
+    
+    restaurant_input = gr.Textbox(
+        label="Restaurant Name",
+        placeholder="e.g., 'Joe's Pizza Brooklyn'"
+    )
+    
+    error_output = gr.Markdown()
+    
+    with gr.Row():
+        r_slider = gr.Slider(
+            minimum=1, maximum=5, value=2.5, step=0.1,
+            label="Prior Rating (R)",
+            info="Expected rating with no reviews"
+        )
+        w_slider = gr.Slider(
+            minimum=0, maximum=50, value=5, step=1,
+            label="Prior Weight (W)",
+            info="Strength of prior belief"
+        )
+    
+    with gr.Row():
+        restaurant_name = gr.Textbox(label="Restaurant", interactive=False)
+        google_rating = gr.Textbox(label="Google Rating", interactive=False)
+        bayesian_rating = gr.Textbox(label="Bayesian Rating", interactive=False)
     
     restaurant_input.submit(
-        fn=search_wrapper,
+        fn=process_restaurant,
         inputs=[restaurant_input, r_slider, w_slider, api_key_input],
-        outputs=[api_status_output, error_output, restaurant_name, google_rating, sliders_row, calc_btn, bayesian_output]
-    )
-    
-    # Wire up the calculate button (recalculates when sliders change)
-    calc_btn.click(
-        fn=search_wrapper,
-        inputs=[restaurant_input, r_slider, w_slider, api_key_input],
-        outputs=[api_status_output, error_output, restaurant_name, google_rating, sliders_row, calc_btn, bayesian_output]
+        outputs=[api_status, error_output, restaurant_name, google_rating, bayesian_rating]
     )
     
     r_slider.change(
-        fn=search_wrapper,
+        fn=process_restaurant,
         inputs=[restaurant_input, r_slider, w_slider, api_key_input],
-        outputs=[api_status_output, error_output, restaurant_name, google_rating, sliders_row, calc_btn, bayesian_output]
+        outputs=[api_status, error_output, restaurant_name, google_rating, bayesian_rating]
     )
     
     w_slider.change(
-        fn=search_wrapper,
+        fn=process_restaurant,
         inputs=[restaurant_input, r_slider, w_slider, api_key_input],
-        outputs=[api_status_output, error_output, restaurant_name, google_rating, sliders_row, calc_btn, bayesian_output]
+        outputs=[api_status, error_output, restaurant_name, google_rating, bayesian_rating]
     )
 
 if __name__ == "__main__":
